@@ -1,0 +1,203 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="tk.mybatis.simple.mapper.UserMapper" >
+	<!--  <resultMap type="Country" id="BaseResultMap">
+		<id column="id" property="id"/>
+		<result column="country_name" property="countryName"/>
+		<result column="country_code" property="countryCode"/>
+	</resultMap>
+	<sql id="Base_Column_List">
+		id,country_name,country_code
+	</sql>
+	<select id="selectAll" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List"/>
+		from country
+	</select>
+	-->
+	<select id="selectAll" resultType="SysUser">
+		select 
+		id,user_name,user_password,user_email,user_info,head_img,create_time
+		from sys_user
+	</select>
+	<select id="selectById" parameterType="Long" resultType="SysUser">
+		select 
+		id,user_name,user_password,user_email,user_info,head_img,create_time
+		from sys_user
+		where id=#{id}
+	</select>
+	<select id="selectRolesByUserId" parameterType="Long" resultType="SysRole">
+		select r.id,
+			   r.role_name roleName,
+			   r.create_by createBy,
+			   r.create_time createTime,
+			   u.user_name as "user.userName",
+			   u.user_email as "user.userEmail"
+		from sys_user u
+		inner join sys_user_role ur on u.id = ur.user_id
+		inner join sys_role r on ur.role_id = r.id
+		where u.id = #{userId}
+	</select>
+	<insert id="insert">
+		insert into sys_user(
+			id,user_name,user_password,user_email,user_info,head_img,create_time)
+		values(
+			#{id},#{userName},#{userPassword},#{userEmail},#{userInfo},#{headImg,jdbcType=BLOB},#{createTime,jdbcType=TIMESTAMP})
+	</insert>
+	<insert id="insert2" useGeneratedKeys="true" keyProperty="id" keyColumn="id">
+		insert into sys_user(
+			user_name,
+			user_password,
+			<if test="userEmail != null and userEmail != ''">
+				user_email,
+			</if>
+			user_info,
+			head_img,
+			create_time)
+		values(
+			#{userName},
+			#{userPassword},
+			<if test="userEmail != null and userEmail != ''">
+				#{userEmail},
+			</if>
+			#{userInfo},
+			#{headImg,jdbcType=BLOB},
+			#{createTime,jdbcType=TIMESTAMP})
+	</insert>
+	<insert id="insert3">
+		insert into sys_user(
+			user_name,user_password,user_email,user_info,head_img,create_time)
+		values(
+			#{userName},#{userPassword},#{userEmail},#{userInfo},#{headImg,jdbcType=BLOB},#{createTime,jdbcType=TIMESTAMP})
+		<selectKey keyColumn="id" resultType="Long" keyProperty="id" order="AFTER">
+			SELECT LAST_INSERT_ID()
+		</selectKey>
+	</insert>
+	<update id="updateByUserId">
+		update sys_user set
+			user_name = #{userName},
+			user_password = #{userPassword},
+			user_email = #{userEmail},
+			user_info = #{userInfo},
+			head_img = #{headImg,jdbcType=BLOB},
+			create_time = #{createTime,jdbcType=TIMESTAMP}
+		where id = #{id}
+	</update>
+	<delete id="deleteByPrimaryKey">
+		delete from sys_user where id = #{id}
+	</delete>
+	<select id="selectRolesByUserIdAndRoleEnabled" resultType="SysRole">
+		select r.id,
+			   r.role_name roleName,
+			   r.enabled,
+			   r.create_by createBy,
+			   r.create_time createTime
+		from sys_user u
+		inner join sys_user_role ur on u.id = ur.user_id
+		inner join sys_role r on ur.role_id = r.id
+		where u.id = #{userId} and r.enabled = #{enabled}
+	</select>
+	<select id="selectByUser" resultType="SysUser">
+		select 
+		id,user_name,user_password,user_email,user_info,head_img,create_time
+		from sys_user
+		<where>
+			<if test="userName !=null and userName != ''">
+				<bind name="userNameLike" value="'%' + userName + '%'"/>
+				and user_name like #{userNameLike}
+			</if>
+			<if test="userEmail != null and userEmail != ''">
+				and user_email = #{userEmail}
+			</if>
+		</where>
+	</select>
+	<update id="updateByIdSelective">
+		update sys_user
+		<set>
+			<if test="userName != null and userName != ''">
+				user_name = #{userName},
+			</if>
+			<if test="userPassword != null and userPassword != ''">
+				user_password = #{userPassword},
+			</if>
+			<if test="userEmail != null and userEmail != ''">
+				user_email = #{userEmail},
+			</if>
+			<if test="userInfo != null and userInfo != ''">
+				user_info = #{userInfo},
+			</if>
+			<if test="headImg != null and headImg != ''">
+				head_img = #{headImg,jdbcType = BLOB},
+			</if>
+			<if test="createTime != null and createTime != ''">
+				create_time = #{createTime,jdbcType = TIMESTAMP},
+			</if>
+			id = #{id},
+		</set>
+		where id = #{id}
+	</update>
+	<select id="selectByIdOrUserName" resultType="SysUser">
+		select 
+		id,user_name,user_password,user_email,user_info,head_img,create_time
+		from sys_user
+		where 1=1
+		<choose>
+			<when test="id != null">
+				and id = #{id}
+			</when>
+			<when test="userName != null and userName != ''">
+				and user_name = #{userName}
+			</when>
+			<otherwise>
+				and 1 = 2
+			</otherwise>
+		</choose>
+	</select>
+	<select id="selectByIdList" resultType="SysUser">
+		SELECT 
+		id,user_name,user_password,user_email,user_info,head_img,create_time
+		FROM sys_user
+		WHERE id IN
+		<foreach collection="idList" open="(" separator="," close=")" item="id1" index="n">
+			#{id1}
+		</foreach> 
+	</select>
+	<select id="selectByIdArray" resultType="SysUser">
+		SELECT 
+		id,user_name,user_password,user_email,user_info,head_img,create_time
+		FROM sys_user
+		where 1 = 1
+		<choose>
+			<when test="idArray != null and idArray != ''">
+				AND id IN
+				<foreach collection="idArray" open="(" close=")" separator="," item="aaa" index="l">
+					#{aaa}
+				</foreach>
+			</when>
+			<otherwise>
+				AND 1 = 2
+			</otherwise>
+		</choose>
+	</select>
+	<insert id="insertList">
+		INSERT INTO sys_user(
+			user_name,user_password,user_email,user_info,head_img,create_time)
+		VALUES
+		<foreach collection="userList" separator="," item="user" index="i">
+			(#{user.userName},
+			#{user.userPassword},
+			#{user.userEmail},
+			#{user.userInfo},
+			#{user.headImg,jdbcType=BLOB},
+			#{user.createTime,jdbcType=TIMESTAMP})
+		</foreach>
+	</insert>
+	<update id="updateByMap">
+		UPDATE sys_user
+		SET
+		<foreach collection="_parameter" separator="," item="val" index="key">
+			${key} = #{val}
+		</foreach>
+		where id = #{id}
+	</update>
+</mapper>
